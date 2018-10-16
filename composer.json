@@ -4,6 +4,7 @@
   "type": "magento2-module",
   "homepage": "https://github.com/flancer32/mage2_mod_em34",
   "license": "BSD-3-Clause",
+  "version": "0.1.0",
   "authors": [
     {
       "name": "Alex Gusev", "email": "alex@flancer64.com"
