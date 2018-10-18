@@ -15,11 +15,18 @@ use Em34\App\Service\Replicate\Product\Save\Response as AResponse;
 class Products
     extends \Symfony\Component\Console\Command\Command
 {
+    private const DESC = 'Import products from JSON (catalog initialization).';
+    private const NAME = 'em34:import:prod';
 
-    const DESC = 'Import products from JSON (catalog initialization).';
-    const NAME = 'em34:import:prod';
-    /** TODO: add CLI parameter for input file name */
-    const TMP = '/home/alex/Dropbox/work/prj/em34/import_20181017.json';
+    private const OPT_ALL_DEFAULT = 'no';
+    private const OPT_ALL_NAME = 'all';
+    private const OPT_ALL_SHORTCUT = 'a';
+    private const OPT_LIMIT_DEFAULT = 100;
+    private const OPT_LIMIT_NAME = 'limit';
+    private const OPT_LIMIT_SHORTCUT = 'l';
+    private const OPT_PATH_NAME = 'path';
+    private const OPT_PATH_SHORTCUT = 'p';
+
     /** @var \Magento\Framework\App\State */
     private $appState;
     /** @var \Magento\Framework\ObjectManagerInterface */
@@ -39,6 +46,27 @@ class Products
         $this->manObj = $manObj;
         $this->appState = $appState;
         $this->srvProdSave = $srvProdSave;
+        /* add command options */
+        $this->addOption(
+            self::OPT_ALL_NAME,
+            self::OPT_ALL_SHORTCUT,
+            \Symfony\Component\Console\Input\InputOption::VALUE_OPTIONAL,
+            "Set 'yes' to import all lines, 'limit' option is ignored in this case (default: no).",
+            self::OPT_ALL_DEFAULT
+        );
+        $this->addOption(
+            self::OPT_LIMIT_NAME,
+            self::OPT_LIMIT_SHORTCUT,
+            \Symfony\Component\Console\Input\InputOption::VALUE_OPTIONAL,
+            "Limit number of records for importing (default: 100).",
+            self::OPT_LIMIT_DEFAULT
+        );
+        $this->addOption(
+            self::OPT_PATH_NAME,
+            self::OPT_PATH_SHORTCUT,
+            \Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED,
+            "Full path to JSON file with data to import into Magneto Catalog."
+        );
     }
 
     /**
@@ -82,26 +110,49 @@ class Products
     ) {
         /** define local working data */
         $output->writeln("Command '{$this->getName()}' is started.");
+        $all = (string)$input->getOption(self::OPT_ALL_NAME);
+        $limit = (int)$input->getOption(self::OPT_LIMIT_NAME);
+        $path = (string)$input->getOption(self::OPT_PATH_NAME);
+        $msg = 'Arguments: ' . self::OPT_ALL_NAME . "=$all; ";
+        $msg .= self::OPT_LIMIT_NAME . "=$limit; ";
+        $msg .= self::OPT_PATH_NAME . "=$path; ";
+        $output->writeln($msg);
 
         /** perform operation */
         $this->checkAreaCode();
-        $json = $this->readJson();
-        $json = array_slice($json, 0, 100);
+        /* read JSON */
+        $json = $this->readJson($path);
+        /* define number of lines to import */
+        if ($all == self::OPT_ALL_DEFAULT) {
+            if ($limit <= 0) {
+                $limit = self::OPT_LIMIT_DEFAULT;
+            }
+            $json = array_slice($json, 0, $limit);
+        }
+
+        /* process JSON data */
         foreach ($json as $one) {
             /** @var ARequest $req */
             $req = $this->convertToRequest($one);
-            /** @var AResponse $resp */
+            /** @var AResponse $resp (is not used yet) */
             $resp = $this->srvProdSave->exec($req);
+            $mageId = $resp->mageId;
+            $name = $resp->name;
+            $sku = $resp->sku;
+            $output->writeln("\t$mageId:\t$sku - $name.");
         }
 
         /** compose result */
-
         $output->writeln("Command '{$this->getName()}' is executed.");
     }
 
-    private function readJson()
+    /**
+     * @param string $path full path to JSON file with import data.
+     * @return array parsed data as associative array.
+     */
+    private function readJson($path)
     {
-        $content = file_get_contents(self::TMP);
+        $content = file_get_contents($path);
         $result = json_decode($content);
         return $result;
     }

@@ -63,9 +63,11 @@ class Save
 
     public function exec($request)
     {
+        /** define local working data */
         assert($request instanceof ARequest);
-        $result = new AResponse();
-        $this->createProduct(
+
+        /** perform processing */
+        $mageId = $this->createProduct(
             $request->sku,
             $request->name,
             $request->description,
@@ -75,6 +77,12 @@ class Save
             $request->weight,
             $request->urlKey
         );
+
+        /** compose result */
+        $result = new AResponse();
+        $result->mageId = $mageId;
+        $result->name = $request->name;
+        $result->sku = $request->sku;
         return $result;
     }
 
