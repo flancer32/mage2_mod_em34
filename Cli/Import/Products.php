@@ -7,6 +7,7 @@
 namespace Em34\App\Cli\Import;
 
 use Em34\App\Service\Replicate\Product\Save\Request as ARequest;
+use Em34\App\Service\Replicate\Product\Save\Request\Attribute as DAttr;
 use Em34\App\Service\Replicate\Product\Save\Response as AResponse;
 
 /**
@@ -91,6 +92,8 @@ class Products
     private function convertToRequest($item)
     {
         $result = new ARequest();
+//        $attrSource = isset($item->additionalattributes) ? $item->additionalattributes : '';
+//        $attrParsed = $this->parseAttrs($attrSource);
         $result->attributes = [];
         $result->descShort = isset($item->short_description) ? $item->short_description : '';
         $result->description = isset($item->description) ? $item->description : '';
@@ -101,6 +104,25 @@ class Products
         $result->status = \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED;
         $result->urlkey = isset($item->urlkey) ? $item->urlkey : '';
         $result->weight = isset($item->weight) ? $item->weight : '';
+        return $result;
+    }
+
+    /**
+     * Product attributes parsing.
+     *
+     * @param string $source
+     * @return DAttr[]
+     */
+    private function parseAttrs($source)
+    {
+        $result = [];
+        $attrs = explode(',', $source);
+        foreach ($attrs as $attr) {
+            $parts = explode('=', $attr);
+            $one = new DAttr();
+            $one->code = $parts[0];
+            $one->value = $parts[1];
+        }
         return $result;
     }
 
