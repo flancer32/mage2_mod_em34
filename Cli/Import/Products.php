@@ -32,11 +32,14 @@ class Products
     private $appState;
     /** @var \Magento\Framework\ObjectManagerInterface */
     private $manObj;
+    /** @var \Magento\Framework\App\ResourceConnection */
+    private $resource;
     /** @var \Em34\App\Service\Replicate\Product\Save */
     private $srvProdSave;
 
     public function __construct(
         \Magento\Framework\ObjectManagerInterface $manObj,
+        \Magento\Framework\App\ResourceConnection $resource,
         \Magento\Framework\App\State $appState,
         \Em34\App\Service\Replicate\Product\Save $srvProdSave
     ) {
@@ -45,6 +48,7 @@ class Products
         $this->setDescription(self::DESC);
         /* own properties */
         $this->manObj = $manObj;
+        $this->resource = $resource;
         $this->appState = $appState;
         $this->srvProdSave = $srvProdSave;
         /* add command options */
@@ -107,25 +111,6 @@ class Products
         return $result;
     }
 
-    /**
-     * Product attributes parsing.
-     *
-     * @param string $source
-     * @return DAttr[]
-     */
-    private function parseAttrs($source)
-    {
-        $result = [];
-        $attrs = explode(',', $source);
-        foreach ($attrs as $attr) {
-            $parts = explode('=', $attr);
-            $one = new DAttr();
-            $one->code = $parts[0];
-            $one->value = $parts[1];
-        }
-        return $result;
-    }
-
     protected function execute(
         \Symfony\Component\Console\Input\InputInterface $input,
         \Symfony\Component\Console\Output\OutputInterface $output
@@ -152,20 +137,50 @@ class Products
             $json = array_slice($json, 0, $limit);
         }
 
-        /* process JSON data */
-        foreach ($json as $one) {
-            /** @var ARequest $req */
-            $req = $this->convertToRequest($one);
-            /** @var AResponse $resp (is not used yet) */
-            $resp = $this->srvProdSave->exec($req);
-            $mageId = $resp->mageId;
-            $name = $resp->name;
-            $sku = $resp->sku;
-            $output->writeln("\t$mageId:\t$sku - $name.");
+
+        /* process JSON data inside DB transaction */
+        $conn = $this->resource->getConnection();
+        $conn->beginTransaction();
+        try {
+            foreach ($json as $one) {
+                /** @var ARequest $req */
+                $req = $this->convertToRequest($one);
+                /** @var AResponse $resp (is not used yet) */
+                $resp = $this->srvProdSave->exec($req);
+                $mageId = $resp->mageId;
+                $name = $resp->name;
+                $sku = $resp->sku;
+                $price = $req->price;
+                $qty = $req->qty;
+                $output->writeln("\t$mageId:\t$sku - $name ($price RUB; qty: $qty;).");
+            }
+            $conn->commit();
+        } catch (\Throwable $e) {
+            $output->writeln("Error: " . $e->getMessage());
+            $conn->rollBack();
         }
 
         /** compose result */
         $output->writeln("Command '{$this->getName()}' is executed.");
+    }
+
+    /**
+     * Product attributes parsing.
+     *
+     * @param string $source
+     * @return DAttr[]
+     */
+    private function parseAttrs($source)
+    {
+        $result = [];
+        $attrs = explode(',', $source);
+        foreach ($attrs as $attr) {
+            $parts = explode('=', $attr);
+            $one = new DAttr();
+            $one->code = $parts[0];
+            $one->value = $parts[1];
+        }
+        return $result;
     }
 
     /**

@@ -36,7 +36,7 @@ class Save
         $this->repoProd = $repoProd;
     }
 
-    private function createProduct($sku, $name, $desc, $shortDesc, $status, $price, $weight, $urlKey)
+    private function createProduct($sku, $name, $desc, $shortDesc, $status, $qty, $price, $weight, $urlKey)
     {
         $attrSetId = $this->getAttributeSetId();
         /** @var  $product \Magento\Catalog\Api\Data\ProductInterface */
@@ -47,6 +47,8 @@ class Save
         $product->setShortDescription($shortDesc);
         $product->setStatus($status);
         $product->setPrice($price);
+        $product->setQty($qty);
+        $product->setIsInStock(true);
         $product->setWeight($weight);
         $product->setAttributeSetId($attrSetId);
         $product->setTypeId(\Magento\Catalog\Model\Product\Type::TYPE_SIMPLE);
@@ -54,8 +56,16 @@ class Save
         $product->setStoreId(Cfg::STORE_ID_ADMIN);
         $websiteId = Cfg::WEBSITE_DEF;
         $product->setWebsiteIds([$websiteId]);
+        /* stock data */
+        $isInStock = ($qty > 0);
+        $stockData = [
+            'is_in_stock' => $isInStock,
+            'qty' => $qty
+        ];
+        $product->setStockData($stockData);
+
+        /* create/update product */
         $saved = $this->repoProd->save($product);
-//        $this->repoProd->save($saved);
         /* return product ID */
         $result = $saved->getId();
         return $result;
@@ -65,24 +75,35 @@ class Save
     {
         /** define local working data */
         assert($request instanceof ARequest);
+        $description = $request->description;
+        $descShort = $request->descShort;
+        $price = $request->price;
+        $qty = $request->qty;
+        $name = $request->name;
+        $sku = $request->sku;
+        $status = $request->status;
+        $urlKey = $request->urlKey;
+        $weight = $request->weight;
 
         /** perform processing */
         $mageId = $this->createProduct(
-            $request->sku,
-            $request->name,
-            $request->description,
-            $request->descShort,
-            $request->status,
-            $request->price,
-            $request->weight,
-            $request->urlKey
+            $sku,
+            $name,
+            $description,
+            $descShort,
+            $status,
+            $qty,
+            $price,
+            $weight,
+            $urlKey
         );
 
         /** compose result */
+        $this->logger->info("Product '$sku' is imported (price: $price, qty: $qty).");
         $result = new AResponse();
         $result->mageId = $mageId;
-        $result->name = $request->name;
-        $result->sku = $request->sku;
+        $result->name = $name;
+        $result->sku = $sku;
         return $result;
     }
 
