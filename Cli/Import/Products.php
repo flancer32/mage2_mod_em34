@@ -6,6 +6,7 @@
 
 namespace Em34\App\Cli\Import;
 
+use Em34\App\Service\Import\Products\Request as AReqImport;
 use Em34\App\Service\Replicate\Product\Save\Request as ARequest;
 use Em34\App\Service\Replicate\Product\Save\Request\Attribute as DAttr;
 use Em34\App\Service\Replicate\Product\Save\Response as AResponse;
@@ -32,12 +33,14 @@ class Products
     private $appState;
     /** @var \Magento\Framework\ObjectManagerInterface */
     private $manObj;
+    private $srvImportProd;
     /** @var \Em34\App\Service\Replicate\Product\Save */
     private $srvProdSave;
 
     public function __construct(
         \Magento\Framework\ObjectManagerInterface $manObj,
         \Magento\Framework\App\State $appState,
+        \Em34\App\Service\Import\Products $srvImportProd,
         \Em34\App\Service\Replicate\Product\Save $srvProdSave
     ) {
         parent::__construct(self::NAME);
@@ -46,6 +49,7 @@ class Products
         /* own properties */
         $this->manObj = $manObj;
         $this->appState = $appState;
+        $this->srvImportProd = $srvImportProd;
         $this->srvProdSave = $srvProdSave;
         /* add command options */
         $this->addOption(
@@ -107,25 +111,6 @@ class Products
         return $result;
     }
 
-    /**
-     * Product attributes parsing.
-     *
-     * @param string $source
-     * @return DAttr[]
-     */
-    private function parseAttrs($source)
-    {
-        $result = [];
-        $attrs = explode(',', $source);
-        foreach ($attrs as $attr) {
-            $parts = explode('=', $attr);
-            $one = new DAttr();
-            $one->code = $parts[0];
-            $one->value = $parts[1];
-        }
-        return $result;
-    }
-
     protected function execute(
         \Symfony\Component\Console\Input\InputInterface $input,
         \Symfony\Component\Console\Output\OutputInterface $output
@@ -153,19 +138,61 @@ class Products
         }
 
         /* process JSON data */
-        foreach ($json as $one) {
-            /** @var ARequest $req */
-            $req = $this->convertToRequest($one);
-            /** @var AResponse $resp (is not used yet) */
-            $resp = $this->srvProdSave->exec($req);
-            $mageId = $resp->mageId;
-            $name = $resp->name;
-            $sku = $resp->sku;
-            $output->writeln("\t$mageId:\t$sku - $name.");
-        }
+        $req = $this->getImportRequest($json, 100);
+        $resp = $this->srvImportProd->exec($req);
+//        foreach ($json as $one) {
+//            /** @var ARequest $req */
+//            $req = $this->convertToRequest($one);
+        /** @var AResponse $resp (is not used yet) */
+//            $resp = $this->srvProdSave->exec($req);
+//            $mageId = $resp->mageId;
+//            $name = $resp->name;
+//            $sku = $resp->sku;
+//            $output->writeln("\t$mageId:\t$sku - $name.");
+//        }
 
         /** compose result */
         $output->writeln("Command '{$this->getName()}' is executed.");
+    }
+
+    private function getImportRequest($json, $bunchSize)
+    {
+        $result = new AReqImport();
+        $result->bunchSize = $bunchSize;
+        $items = [];
+        foreach ($json as $one) {
+            /** define local working data */
+            if (property_exists($one, 'sku')) {
+                $sku = $one->sku;
+                /** compose result */
+                $item = new \Em34\App\Service\Import\Products\Request\Item();
+                $prod = new \Em34\App\Service\Import\Products\Request\Item\Product();
+                $prod->sku = $sku;
+                $item->product = $prod;
+                $items[] = $item;
+            }
+        }
+        $result->items = $items;
+        return $result;
+    }
+
+    /**
+     * Product attributes parsing.
+     *
+     * @param string $source
+     * @return DAttr[]
+     */
+    private function parseAttrs($source)
+    {
+        $result = [];
+        $attrs = explode(',', $source);
+        foreach ($attrs as $attr) {
+            $parts = explode('=', $attr);
+            $one = new DAttr();
+            $one->code = $parts[0];
+            $one->value = $parts[1];
+        }
+        return $result;
     }
 
     /**

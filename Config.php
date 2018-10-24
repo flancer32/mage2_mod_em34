@@ -10,6 +10,19 @@ namespace Em34\App;
 
 class Config
 {
+    /**#@+
+     * Magento entities.
+     */
+    const ENTITY_CATALOG_PRODUCT_WEBSITE = 'catalog_product_website';
+    /**$#- */
+
+    /**#@+
+     * Magento entities attributes.
+     */
+    const E_CATALOG_PRODUCT_WEBSITE_A_PRODUCT_ID = 'product_id';
+    const E_CATALOG_PRODUCT_WEBSITE_A_WEBSITE_ID = 'website_id';
+    /**$#- */
+
     /** This module name. */
     const MODULE = self::MODULE_VENDOR . '_' . self::MODULE_PACKAGE;
     const MODULE_PACKAGE = 'App';
