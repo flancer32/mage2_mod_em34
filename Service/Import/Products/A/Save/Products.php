@@ -12,10 +12,10 @@ use Magento\Eav\Model\Entity as EntityModel;
 
 class Products
 {
-    /** @var \Em34\App\Service\Import\Products\A\Helper\Repo\Cache */
-    private $hlpRepoCache;
     /** @var \Em34\App\Helper\Repo\GetProdIdsBySku */
     private $hlpGetProdIdsBySku;
+    /** @var \Em34\App\Service\Import\Products\A\Helper\Repo\Cache */
+    private $hlpRepoCache;
     /** @var \Magento\Framework\App\ResourceConnection */
     private $resource;
 
@@ -35,7 +35,7 @@ class Products
      */
     public function exec($bunch)
     {
-        $rows = [];
+        $toSave = [];
 
         $entityTypeIdProduct = $this->hlpRepoCache->getEntityTypeId(Cfg::TYPE_ENTITY_PRODUCT);
         $attrSetIdDefault = $this->hlpRepoCache->getAttributeSetId($entityTypeIdProduct);
@@ -48,14 +48,23 @@ class Products
                 EProd::SKU => $sku,
                 EProd::ATTRIBUTE_SET_ID => $attrSetIdDefault
             ];
-            $rows[$sku] = $row;
+            $toSave[$sku] = $row;
         }
         /* get IDs for existing products */
-        $listSku = array_keys($rows);
+        $listSku = array_keys($toSave);
         $found = $this->hlpGetProdIdsBySku->exec($listSku);
         foreach ($found as $sku => $prodId) {
-            $rows[$sku][EntityModel::DEFAULT_ENTITY_ID_FIELD] = $prodId;
+            $toSave[$sku][EntityModel::DEFAULT_ENTITY_ID_FIELD] = $prodId;
         }
+        $this->save($toSave);
+        /* get ids for all product in the current bunch */
+        $result = $this->hlpGetProdIdsBySku->exec($listSku);
+        return $result;
+    }
+
+    private function save($toSave)
+    {
+
         $conn = $this->resource->getConnection();
         $entity = [\Magento\Catalog\Model\Product::ENTITY, 'entity'];
         $table = $this->resource->getTableName($entity);
@@ -63,9 +72,6 @@ class Products
             EProd::ATTRIBUTE_SET_ID,
             EProd::UPDATED_AT,
         ];
-        $conn->insertOnDuplicate($table, $rows, $fields);
-        /* get ids for all product in the current bunch */
-        $result = $this->hlpGetProdIdsBySku->exec($listSku);
-        return $result;
+        $conn->insertOnDuplicate($table, $toSave, $fields);
     }
 }

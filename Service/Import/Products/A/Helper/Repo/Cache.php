@@ -20,6 +20,8 @@ class Cache
     /** @var array */
     private $cacheEntityTypes;
     /** @var array */
+    private $cacheStocks;
+    /** @var array */
     private $cacheWebsites;
     /** @var \Magento\Framework\App\ResourceConnection */
     private $resource;
@@ -115,6 +117,29 @@ class Cache
             }
         }
         $result = $this->cacheEntityTypes[$code];
+        return $result;
+    }
+
+    public function getStockId($name)
+    {
+        if (is_null($this->cacheStocks)) {
+            $conn = $this->resource->getConnection();
+            $query = $conn->select();
+            $table = $this->resource->getTableName(Cfg::ENTITY_CATALOGINVENTORY_STOCK);
+            $cols = [
+                Cfg::E_CATINV_STOCK_A_STOCK_ID,
+                Cfg::E_CATINV_STOCK_A_STOCK_NAME
+            ];
+            $query->from($table, $cols);
+            $rs = $conn->fetchAll($query);
+            $this->cacheStocks= [];
+            foreach ($rs as $item) {
+                $itemId = $item[Cfg::E_CATINV_STOCK_A_STOCK_ID];
+                $itemName = $item[Cfg::E_CATINV_STOCK_A_STOCK_NAME];
+                $this->cacheStocks[$itemName] = $itemId;
+            }
+        }
+        $result = $this->cacheStocks[$name];
         return $result;
     }
 

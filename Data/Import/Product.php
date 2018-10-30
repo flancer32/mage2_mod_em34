@@ -19,6 +19,8 @@ class Product
     public $entity_id;
     /** @var bool */
     public $has_options;
+    /** @var float */
+    public $qty;
     /** @var bool */
     public $required_options;
     /** @var string */

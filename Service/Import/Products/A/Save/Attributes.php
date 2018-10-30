@@ -14,8 +14,6 @@ class Attributes
 {
     /** @var \Magento\Framework\Filter\TranslitUrl */
     private $filterTranslit;
-    /** @var \Em34\App\Helper\Repo\GetProdIdsBySku */
-    private $hlpGetProdIdsBySku;
     /** @var \Em34\App\Service\Import\Products\A\Helper\Repo\Cache */
     private $hlpRepoCache;
     /** @var \Magento\Framework\App\ResourceConnection */
@@ -24,29 +22,27 @@ class Attributes
     public function __construct(
         \Magento\Framework\App\ResourceConnection $resource,
         \Magento\Framework\Filter\TranslitUrl $filterTranslit,
-        \Em34\App\Helper\Repo\GetProdIdsBySku $hlpGetProdIdsBySku,
         \Em34\App\Service\Import\Products\A\Helper\Repo\Cache $hlpRepoCache
     ) {
         $this->resource = $resource;
         $this->filterTranslit = $filterTranslit;
-        $this->hlpGetProdIdsBySku = $hlpGetProdIdsBySku;
         $this->hlpRepoCache = $hlpRepoCache;
     }
 
     /**
      * Compose data structure to be inserted into "catalog_product_entity_[datetime|decimal|text|varchar]"
      *
-     * @param array $attrsToSave
-     * @param array $attrsDesc
+     * @param array $toSave
+     * @param array $attrs
      * @param string $name
      * @param mixed $value
      * @param int $prodId
      */
-    private function collectAttr(&$attrsToSave, $attrsDesc, $name, $value, $prodId)
+    private function collectAttr(&$toSave, $attrs, $name, $value, $prodId)
     {
         /* don't process empty attributes */
         if (!empty(trim($value))) {
-            $attrName = $attrsDesc[$name];
+            $attrName = $attrs[$name];
             $attrId = $attrName[Cfg::E_EAV_ATTRIBUTE_A_ATTRIBUTE_ID];
             $attrType = $attrName[Cfg::E_EAV_ATTRIBUTE_A_BACKEND_TYPE];
             $row = [
@@ -55,7 +51,7 @@ class Attributes
                 Cfg::E_EAV_ALL_A_ENTITY_ID => $prodId,
                 Cfg::E_EAV_ALL_A_VALUE => $value
             ];
-            $attrsToSave[$attrType][] = $row;
+            $toSave[$attrType][] = $row;
         }
     }
 
@@ -67,9 +63,9 @@ class Attributes
     {
         /* get description of all attributes */
         $entityTypeIdProduct = $this->hlpRepoCache->getEntityTypeId(Cfg::TYPE_ENTITY_PRODUCT);
-        $attrsDesc = $this->hlpRepoCache->getAttributes($entityTypeIdProduct);
+        $attrs = $this->hlpRepoCache->getAttributes($entityTypeIdProduct);
         /* compose arrays with data to insert */
-        $attrsToSave = [];
+        $toSave = [];
         $status = ProdStatus::STATUS_ENABLED;
         $taxClassId = Cfg::TAX_CLASS_ID_GOODS;
         $visibility = AVisibility::VISIBILITY_BOTH;
@@ -86,18 +82,18 @@ class Attributes
             $weight = $product->weight;
 
             /* collect attributes grouped by type */
-            $this->collectAttr($attrsToSave, $attrsDesc, 'country_of_manufacture', $country, $prodId);
-            $this->collectAttr($attrsToSave, $attrsDesc, 'description', $description, $prodId);
-            $this->collectAttr($attrsToSave, $attrsDesc, 'name', $name, $prodId);
-            $this->collectAttr($attrsToSave, $attrsDesc, 'price', $price, $prodId);
-            $this->collectAttr($attrsToSave, $attrsDesc, 'status', $status, $prodId);
-            $this->collectAttr($attrsToSave, $attrsDesc, 'tax_class_id', $taxClassId, $prodId);
-            $this->collectAttr($attrsToSave, $attrsDesc, 'url_key', $urlKey, $prodId);
-            $this->collectAttr($attrsToSave, $attrsDesc, 'visibility', $visibility, $prodId);
-            $this->collectAttr($attrsToSave, $attrsDesc, 'weight', $weight, $prodId);
+            $this->collectAttr($toSave, $attrs, 'country_of_manufacture', $country, $prodId);
+            $this->collectAttr($toSave, $attrs, 'description', $description, $prodId);
+            $this->collectAttr($toSave, $attrs, 'name', $name, $prodId);
+            $this->collectAttr($toSave, $attrs, 'price', $price, $prodId);
+            $this->collectAttr($toSave, $attrs, 'status', $status, $prodId);
+            $this->collectAttr($toSave, $attrs, 'tax_class_id', $taxClassId, $prodId);
+            $this->collectAttr($toSave, $attrs, 'url_key', $urlKey, $prodId);
+            $this->collectAttr($toSave, $attrs, 'visibility', $visibility, $prodId);
+            $this->collectAttr($toSave, $attrs, 'weight', $weight, $prodId);
         }
 
-        $this->saveAttributes($attrsToSave);
+        $this->save($toSave);
     }
 
     private function getProductUrlKey($name)
@@ -112,9 +108,9 @@ class Attributes
         return $result;
     }
 
-    private function saveAttributes($attrsToSave)
+    private function save($toSave)
     {
-        foreach ($attrsToSave as $type => $rows) {
+        foreach ($toSave as $type => $rows) {
             $table = Cfg::EAV_PRODUCT . $type;
             $table = $this->resource->getTableName($table);
             $conn = $this->resource->getConnection();

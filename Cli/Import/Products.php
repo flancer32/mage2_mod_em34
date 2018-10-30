@@ -168,6 +168,7 @@ class Products
                 $description = $one->description ?? '';
                 $price = $one->price ?? 0;
                 $weight = $one->weight ?? 0;
+                $qty = $one->qty ?? 0;
                 $country = $one->countryofmanufacture ?? '';
                 $country = $this->getCountryCode($country);
 
@@ -177,6 +178,7 @@ class Products
                 $prod->description = $description;
                 $prod->name = $name;
                 $prod->price = $price;
+                $prod->qty = $qty;
                 $prod->sku = $sku;
                 $prod->weight = $weight;
 

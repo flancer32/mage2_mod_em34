@@ -34,8 +34,8 @@ class Websites
         /* compose array with data to insert */
         foreach ($prodIds as $id) {
             $row = [
-                Cfg::E_CATALOG_PRODUCT_WEBSITE_A_PRODUCT_ID => $id,
-                Cfg::E_CATALOG_PRODUCT_WEBSITE_A_WEBSITE_ID => $websiteId,
+                Cfg::E_CATPROD_WEBSITE_A_PRODUCT_ID => $id,
+                Cfg::E_CATPROD_WEBSITE_A_WEBSITE_ID => $websiteId,
             ];
             $rows[] = $row;
         }
