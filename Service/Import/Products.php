@@ -11,6 +11,8 @@ use Em34\App\Service\Import\Products\Response as AResponse;
 
 class Products
 {
+    /** @var \Em34\App\Service\Import\Products\A\Save\Attributes */
+    private $aSaveAttrs;
     /** @var \Em34\App\Service\Import\Products\A\Save\Link\Websites */
     private $aSaveLinkWebsite;
     /** @var \Em34\App\Service\Import\Products\A\Save\Products */
@@ -21,10 +23,12 @@ class Products
     public function __construct(
         \Magento\Framework\App\ResourceConnection $resource,
         \Em34\App\Service\Import\Products\A\Save\Products $aSaveProd,
+        \Em34\App\Service\Import\Products\A\Save\Attributes $aSaveAttrs,
         \Em34\App\Service\Import\Products\A\Save\Link\Websites $aSaveLinkWebsite
     ) {
         $this->resource = $resource;
         $this->aSaveProd = $aSaveProd;
+        $this->aSaveAttrs = $aSaveAttrs;
         $this->aSaveLinkWebsite = $aSaveLinkWebsite;
     }
 
@@ -48,6 +52,7 @@ class Products
     {
         $listProdIds = $this->aSaveProd->exec($bunch);
         $this->aSaveLinkWebsite->exec($listProdIds);
+        $this->aSaveAttrs->exec($bunch, $listProdIds);
     }
 
 }

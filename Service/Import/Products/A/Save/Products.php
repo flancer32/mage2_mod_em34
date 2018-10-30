@@ -6,13 +6,14 @@
 
 namespace Em34\App\Service\Import\Products\A\Save;
 
+use Em34\App\Config as Cfg;
 use Magento\Catalog\Api\Data\ProductInterface as EProd;
 use Magento\Eav\Model\Entity as EntityModel;
 
 class Products
 {
-    /** @var \Em34\App\Service\Import\Products\A\Helper\Configurator */
-    private $hlpConfigurator;
+    /** @var \Em34\App\Service\Import\Products\A\Helper\Repo\Cache */
+    private $hlpRepoCache;
     /** @var \Em34\App\Helper\Repo\GetProdIdsBySku */
     private $hlpGetProdIdsBySku;
     /** @var \Magento\Framework\App\ResourceConnection */
@@ -21,11 +22,11 @@ class Products
     public function __construct(
         \Magento\Framework\App\ResourceConnection $resource,
         \Em34\App\Helper\Repo\GetProdIdsBySku $hlpGetProdIdsBySku,
-        \Em34\App\Service\Import\Products\A\Helper\Configurator $hlpConfigurator
+        \Em34\App\Service\Import\Products\A\Helper\Repo\Cache $hlpRepoCache
     ) {
         $this->resource = $resource;
         $this->hlpGetProdIdsBySku = $hlpGetProdIdsBySku;
-        $this->hlpConfigurator = $hlpConfigurator;
+        $this->hlpRepoCache = $hlpRepoCache;
     }
 
     /**
@@ -35,7 +36,9 @@ class Products
     public function exec($bunch)
     {
         $rows = [];
-        $attrSetId = $this->hlpConfigurator->getAttributeSetId();
+
+        $entityTypeIdProduct = $this->hlpRepoCache->getEntityTypeId(Cfg::TYPE_ENTITY_PRODUCT);
+        $attrSetIdDefault = $this->hlpRepoCache->getAttributeSetId($entityTypeIdProduct);
         /* compose array with data to insert */
         foreach ($bunch as $one) {
             $sku = $one->product->sku;
@@ -43,7 +46,7 @@ class Products
             $row = [
                 EntityModel::DEFAULT_ENTITY_ID_FIELD => null,
                 EProd::SKU => $sku,
-                EProd::ATTRIBUTE_SET_ID => $attrSetId
+                EProd::ATTRIBUTE_SET_ID => $attrSetIdDefault
             ];
             $rows[$sku] = $row;
         }

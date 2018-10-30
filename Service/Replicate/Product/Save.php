@@ -54,7 +54,7 @@ class Save
         $product->setTypeId(\Magento\Catalog\Model\Product\Type::TYPE_SIMPLE);
         $product->setUrlKey($urlKey);
         $product->setStoreId(Cfg::STORE_ID_ADMIN);
-        $websiteId = Cfg::WEBSITE_DEF;
+        $websiteId = Cfg::WEBSITE_ID_BASE;
         $product->setWebsiteIds([$websiteId]);
         /* stock data */
         $isInStock = ($qty > 0);

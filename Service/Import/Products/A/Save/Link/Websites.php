@@ -12,11 +12,14 @@ class Websites
 {
     /** @var \Magento\Framework\App\ResourceConnection */
     private $resource;
-
+    /** @var \Em34\App\Service\Import\Products\A\Helper\Repo\Cache */
+    private $hlpRepoCache;
     public function __construct(
-        \Magento\Framework\App\ResourceConnection $resource
+        \Magento\Framework\App\ResourceConnection $resource,
+        \Em34\App\Service\Import\Products\A\Helper\Repo\Cache $hlpRepoCache
     ) {
         $this->resource = $resource;
+        $this->hlpRepoCache = $hlpRepoCache;
     }
 
     /**
@@ -27,16 +30,12 @@ class Websites
     public function exec($prodIds)
     {
         $rows = [];
+        $websiteId = $this->hlpRepoCache->getWebsiteId(Cfg::WEBSITE_CODE_BASE);
         /* compose array with data to insert */
         foreach ($prodIds as $id) {
-//            $row = [
-//                Cfg::E_CATALOG_PRODUCT_WEBSITE_A_PRODUCT_ID => $prodId,
-//                Cfg::E_CATALOG_PRODUCT_WEBSITE_A_PRODUCT_ID => Cfg::WEBSITE_ADMIN,
-//            ];
-//            $rows[] = $row;
             $row = [
                 Cfg::E_CATALOG_PRODUCT_WEBSITE_A_PRODUCT_ID => $id,
-                Cfg::E_CATALOG_PRODUCT_WEBSITE_A_WEBSITE_ID => Cfg::WEBSITE_DEF,
+                Cfg::E_CATALOG_PRODUCT_WEBSITE_A_WEBSITE_ID => $websiteId,
             ];
             $rows[] = $row;
         }

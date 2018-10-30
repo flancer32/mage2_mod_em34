@@ -164,10 +164,23 @@ class Products
             /** define local working data */
             if (property_exists($one, 'sku')) {
                 $sku = $one->sku;
+                $name = $one->name ?? '';
+                $description = $one->description ?? '';
+                $price = $one->price ?? 0;
+                $weight = $one->weight ?? 0;
+                $country = $one->countryofmanufacture ?? '';
+                $country = $this->getCountryCode($country);
+
                 /** compose result */
-                $item = new \Em34\App\Service\Import\Products\Request\Item();
                 $prod = new \Em34\App\Service\Import\Products\Request\Item\Product();
+                $prod->country = $country;
+                $prod->description = $description;
+                $prod->name = $name;
+                $prod->price = $price;
                 $prod->sku = $sku;
+                $prod->weight = $weight;
+
+                $item = new \Em34\App\Service\Import\Products\Request\Item();
                 $item->product = $prod;
                 $items[] = $item;
             }
@@ -191,6 +204,37 @@ class Products
             $one = new DAttr();
             $one->code = $parts[0];
             $one->value = $parts[1];
+        }
+        return $result;
+    }
+
+    private function getCountryCode($name)
+    {
+        $nameBoo = trim(mb_strtolower($name));
+        switch ($nameBoo) {
+            case '':
+                $result = null;
+                break;
+            case 'китай':
+                $result = 'CN';
+                break;
+            case 'польша':
+                $result = 'PL';
+                break;
+            case 'россия':
+                $result = 'RU';
+                break;
+            case 'турция':
+                $result = 'TR';
+                break;
+            case 'украина':
+                $result = 'UA';
+                break;
+            case 'япония':
+                $result = 'JP';
+                break;
+            default:
+                $result = null;
         }
         return $result;
     }
