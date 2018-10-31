@@ -8,12 +8,16 @@ namespace Em34\App\Service\Import\Products\A\Save\Link;
 
 use Em34\App\Config as Cfg;
 
+/**
+ * Save links between products & websites.
+ */
 class Websites
 {
     /** @var \Magento\Framework\App\ResourceConnection */
     private $resource;
     /** @var \Em34\App\Service\Import\Products\A\Helper\Repo\Cache */
     private $hlpRepoCache;
+
     public function __construct(
         \Magento\Framework\App\ResourceConnection $resource,
         \Em34\App\Service\Import\Products\A\Helper\Repo\Cache $hlpRepoCache
@@ -39,9 +43,14 @@ class Websites
             ];
             $rows[] = $row;
         }
+        $this->save($rows);
+    }
+
+    private function save($toSave)
+    {
         $conn = $this->resource->getConnection();
         $table = $this->resource->getTableName(Cfg::ENTITY_CATALOG_PRODUCT_WEBSITE);
         $fields = [];
-        $conn->insertOnDuplicate($table, $rows, $fields);
+        $conn->insertOnDuplicate($table, $toSave, $fields);
     }
 }

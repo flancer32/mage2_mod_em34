@@ -14,16 +14,18 @@ use Magento\InventoryApi\Api\Data\SourceItemInterface as AInvStockItem;
 
 class Config
 {
+    const CATALOG_CATEGORY_ROOT_DEF = 3;
+
     /**
      * All tables like "%_[datetime|decimal|int|text|varchar]"
      */
     const EAV_PRODUCT = 'catalog_product_entity_';
-
+    const ENTITY_CATALOGINVENTORY_STOCK = 'cataloginventory_stock';
+    const ENTITY_CATALOGINVENTORY_STOCK_ITEM = 'cataloginventory_stock_item';
     /**#@+
      * Magento entities/tables.
      */
-    const ENTITY_CATALOGINVENTORY_STOCK = 'cataloginventory_stock';
-    const ENTITY_CATALOGINVENTORY_STOCK_ITEM = 'cataloginventory_stock_item';
+    const ENTITY_CATALOG_CATEGORY_PRODUCT = 'catalog_category_product';
     const ENTITY_CATALOG_PRODUCT_WEBSITE = 'catalog_product_website';
     const ENTITY_EAV_ALL = 'all tables like "%_[datetime|decimal|int|text|varchar]"';
     const ENTITY_EAV_ATTRIBUTE = 'eav_attribute';
@@ -36,6 +38,10 @@ class Config
     /**#@+
      * Magento entities/tables attributes/fields.
      */
+    const E_CATCAT_PROD_A_CATEGORY_ID = 'category_id';
+    const E_CATCAT_PROD_A_ENTITY_ID = 'entity_id';
+    const E_CATCAT_PROD_A_POSITION = 'position';
+    const E_CATCAT_PROD_A_PRODUCT_ID = 'product_id';
     const E_CATINV_STOCK_A_STOCK_ID = AStock::STOCK_ID;
     const E_CATINV_STOCK_A_STOCK_NAME = AStock::STOCK_NAME;
     const E_CATINV_STOCK_A_WEBSITE_ID = 'website_id';

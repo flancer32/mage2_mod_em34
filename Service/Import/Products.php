@@ -15,6 +15,8 @@ class Products
     private $aSaveAttrs;
     /** @var \Em34\App\Service\Import\Products\A\Save\Inventory */
     private $aSaveInventory;
+    /** @var \Em34\App\Service\Import\Products\A\Save\Link\Categories */
+    private $aSaveLinkCat;
     /** @var \Em34\App\Service\Import\Products\A\Save\Link\Websites */
     private $aSaveLinkWebsite;
     /** @var \Em34\App\Service\Import\Products\A\Save\Products */
@@ -26,12 +28,14 @@ class Products
         \Magento\Framework\App\ResourceConnection $resource,
         \Em34\App\Service\Import\Products\A\Save\Attributes $aSaveAttrs,
         \Em34\App\Service\Import\Products\A\Save\Inventory $aSaveInventory,
+        \Em34\App\Service\Import\Products\A\Save\Link\Categories $aSaveLinkCat,
         \Em34\App\Service\Import\Products\A\Save\Link\Websites $aSaveLinkWebsite,
         \Em34\App\Service\Import\Products\A\Save\Products $aSaveProd
     ) {
         $this->resource = $resource;
         $this->aSaveAttrs = $aSaveAttrs;
         $this->aSaveInventory = $aSaveInventory;
+        $this->aSaveLinkCat = $aSaveLinkCat;
         $this->aSaveLinkWebsite = $aSaveLinkWebsite;
         $this->aSaveProd = $aSaveProd;
     }
@@ -57,6 +61,7 @@ class Products
         $listProdIds = $this->aSaveProd->exec($bunch);
         $this->aSaveInventory->exec($bunch, $listProdIds);
         $this->aSaveLinkWebsite->exec($listProdIds);
+        $this->aSaveLinkCat->exec($bunch, $listProdIds);
         $this->aSaveAttrs->exec($bunch, $listProdIds);
     }
 
