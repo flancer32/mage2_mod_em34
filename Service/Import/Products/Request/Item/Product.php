@@ -14,6 +14,8 @@ class Product
     /** @var string */
     public $description;
     /** @var string */
+    public $imageUrl;
+    /** @var string */
     public $name;
     /** @var float */
     public $price;

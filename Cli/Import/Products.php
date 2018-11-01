@@ -99,8 +99,8 @@ class Products
 //        $attrSource = isset($item->additionalattributes) ? $item->additionalattributes : '';
 //        $attrParsed = $this->parseAttrs($attrSource);
         $result->attributes = [];
-        $result->descShort = isset($item->short_description) ? $item->short_description : '';
         $result->description = isset($item->description) ? $item->description : '';
+        $result->descShort = isset($item->short_description) ? $item->short_description : '';
         $result->name = isset($item->name) ? $item->name : '';
         $result->price = isset($item->price) ? $item->price : '';
         $result->qty = isset($item->qty) ? $item->qty : '';
@@ -169,6 +169,7 @@ class Products
                 $price = $one->price ?? 0;
                 $weight = $one->weight ?? 0;
                 $qty = $one->qty ?? 0;
+                $imageUrl = $one->imageurl ?? '';
                 $country = $one->countryofmanufacture ?? '';
                 $country = $this->getCountryCode($country);
 
@@ -176,6 +177,7 @@ class Products
                 $prod = new \Em34\App\Service\Import\Products\Request\Item\Product();
                 $prod->country = $country;
                 $prod->description = $description;
+                $prod->imageUrl = $imageUrl;
                 $prod->name = $name;
                 $prod->price = $price;
                 $prod->qty = $qty;

@@ -14,18 +14,25 @@ use Magento\InventoryApi\Api\Data\SourceItemInterface as AInvStockItem;
 
 class Config
 {
+    /** @var int TMP: ID of the root category to place all products into */
     const CATALOG_CATEGORY_ROOT_DEF = 3;
+
+    const EAV_ATTR_PROD_MEDIA_GALLERY = 'media_gallery';
 
     /**
      * All tables like "%_[datetime|decimal|int|text|varchar]"
      */
     const EAV_PRODUCT = 'catalog_product_entity_';
-    const ENTITY_CATALOGINVENTORY_STOCK = 'cataloginventory_stock';
-    const ENTITY_CATALOGINVENTORY_STOCK_ITEM = 'cataloginventory_stock_item';
+
     /**#@+
      * Magento entities/tables.
      */
+    const ENTITY_CATALOGINVENTORY_STOCK = 'cataloginventory_stock';
+    const ENTITY_CATALOGINVENTORY_STOCK_ITEM = 'cataloginventory_stock_item';
     const ENTITY_CATALOG_CATEGORY_PRODUCT = 'catalog_category_product';
+    const ENTITY_CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY = 'catalog_product_entity_media_gallery';
+    const ENTITY_CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE = 'catalog_product_entity_media_gallery_value';
+    const ENTITY_CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE_TO_ENTITY = 'catalog_product_entity_media_gallery_value_to_entity';
     const ENTITY_CATALOG_PRODUCT_WEBSITE = 'catalog_product_website';
     const ENTITY_EAV_ALL = 'all tables like "%_[datetime|decimal|int|text|varchar]"';
     const ENTITY_EAV_ATTRIBUTE = 'eav_attribute';
@@ -73,6 +80,20 @@ class Config
     const E_CATINV_STOCK_ITEM_A_WEBSITE_ID = 'website_id';
     const E_CATPROD_WEBSITE_A_PRODUCT_ID = 'product_id';
     const E_CATPROD_WEBSITE_A_WEBSITE_ID = 'website_id';
+    const E_CPEMG_VALUE_A_DISABLED = 'disabled';
+    const E_CPEMG_VALUE_A_ENTITY_ID = 'entity_id';
+    const E_CPEMG_VALUE_A_LABEL = 'label';
+    const E_CPEMG_VALUE_A_POSITION = 'position';
+    const E_CPEMG_VALUE_A_RECORD_ID = 'record_id';
+    const E_CPEMG_VALUE_A_STORE_ID = 'store_id';
+    const E_CPEMG_VALUE_A_VALUE_ID = 'value_id';
+    const E_CPEMG_VALUE_TO_ENTITY_A_ENTITY_ID = 'entity_id';
+    const E_CPEMG_VALUE_TO_ENTITY_A_VALUE_ID = 'value_id';
+    const E_CPE_MEDIA_GALLERY_A_ATTRIBUTE_ID = 'attribute_id';
+    const E_CPE_MEDIA_GALLERY_A_DISABLED = 'disabled';
+    const E_CPE_MEDIA_GALLERY_A_MEDIA_TYPE = 'media_type';
+    const E_CPE_MEDIA_GALLERY_A_VALUE = 'value';
+    const E_CPE_MEDIA_GALLERY_A_VALUE_ID = 'value_id';
     const E_EAV_ALL_A_ATTRIBUTE_ID = 'attribute_id';
     const E_EAV_ALL_A_ENTITY_ID = 'entity_id';
     const E_EAV_ALL_A_STORE_ID = 'store_id';
@@ -95,6 +116,8 @@ class Config
     const E_STORE_WEBSITE_A_WEBSITE_ID = 'website_id';
     /**$#- */
 
+    const GALLERY_MEDIA_TYPE_IMAGE = 'image';
+
     const INV_SOURCE_CODE_DEF = 'default';
 
     /** This module name. */
@@ -107,12 +130,14 @@ class Config
     const STORE_CODE_DEF = 'default';
     const STORE_ID_ADMIN = 0;
     const STORE_ID_DEF = 1;
+
     /**$#+
      * Tax class IDs (see table "tax_class")
      */
     const TAX_CLASS_ID_CUSTOMER= 3;
-    /**$#- */
     const TAX_CLASS_ID_GOODS = 2;
+    /**$#- */
+
     /**#@+
      * Codes for entities types in 'eav_entity_type'.
      */
@@ -126,6 +151,7 @@ class Config
     const TYPE_ENTITY_SHIPMENT = 'shipment';
     const WEBSITE_CODE_ADMIN = 'admin';
     const WEBSITE_CODE_BASE = 'base';
+
     /** @deprecated  use \Em34\App\Service\Import\Products\A\Helper\Repo\Cache::getWebsiteId */
     const WEBSITE_ID_BASE = 1;
 }
