@@ -17,7 +17,11 @@ class Config
     /** @var int TMP: ID of the root category to place all products into */
     const CATALOG_CATEGORY_ROOT_DEF = 3;
 
+    const EAV_ATTR_PROD_IMAGE = 'image';
     const EAV_ATTR_PROD_MEDIA_GALLERY = 'media_gallery';
+    const EAV_ATTR_PROD_SMALL_IMAGE = 'small_image';
+    const EAV_ATTR_PROD_SWATCH_IMAGE = 'swatch_image';
+    const EAV_ATTR_PROD_THUMBNAIL = 'thumbnail';
 
     /**
      * All tables like "%_[datetime|decimal|int|text|varchar]"
@@ -33,6 +37,7 @@ class Config
     const ENTITY_CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY = 'catalog_product_entity_media_gallery';
     const ENTITY_CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE = 'catalog_product_entity_media_gallery_value';
     const ENTITY_CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE_TO_ENTITY = 'catalog_product_entity_media_gallery_value_to_entity';
+    const ENTITY_CATALOG_PRODUCT_ENTITY_VARCHAR = 'catalog_product_entity_varchar';
     const ENTITY_CATALOG_PRODUCT_WEBSITE = 'catalog_product_website';
     const ENTITY_EAV_ALL = 'all tables like "%_[datetime|decimal|int|text|varchar]"';
     const ENTITY_EAV_ATTRIBUTE = 'eav_attribute';

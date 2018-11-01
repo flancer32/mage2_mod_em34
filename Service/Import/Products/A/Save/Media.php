@@ -12,8 +12,8 @@ class Media
 {
     /** @var \Em34\App\Service\Import\Products\A\Save\Media\A\Download */
     private $aDownload;
-    /** @var int */
-    private $cacheAttrIdMediaGallery;
+    /** @var array [code => id] */
+    private $cacheAttrIds;
     /** @var \Em34\App\Service\Import\Products\A\Helper\Repo\Cache */
     private $hlpRepoCache;
     /** @var \Magento\Framework\App\ResourceConnection */
@@ -35,7 +35,7 @@ class Media
      */
     public function exec($bunch, $prodIds)
     {
-        $attrId = $this->getAttrIdImage();
+        $attrId = $this->getAttrId(Cfg::EAV_ATTR_PROD_MEDIA_GALLERY);
         $rowsGallery = [];
         foreach ($bunch as $item) {
             $prod = $item->product;
@@ -54,19 +54,31 @@ class Media
                 $rowsGallery[$sku] = $rowGallery;
             }
         }
-        list($valueIdsExist, $valueIdsNew) = $this->saveGallery($rowsGallery);
+        $valueIdsNew = $this->saveGallery($rowsGallery);
         $this->saveGalleryValueEntity($rowsGallery, $prodIds, $valueIdsNew);
+        $this->saveVarAttrs($rowsGallery, $prodIds, $valueIdsNew);
     }
 
-    private function getAttrIdImage()
+    /**
+     * Get product attribute ID by attribute code.
+     *
+     * @param string $code
+     * @return int
+     */
+    private function getAttrId($code)
     {
-        if (is_null($this->cacheAttrIdMediaGallery)) {
+        if (is_null($this->cacheAttrIds)) {
             $entityTypeIdProduct = $this->hlpRepoCache->getEntityTypeId(Cfg::TYPE_ENTITY_PRODUCT);
             $all = $this->hlpRepoCache->getAttributes($entityTypeIdProduct);
-            $one = $all[Cfg::EAV_ATTR_PROD_MEDIA_GALLERY];
-            $this->cacheAttrIdMediaGallery = $one[Cfg::E_EAV_ATTRIBUTE_A_ATTRIBUTE_ID];
+            $this->cacheAttrIds = [];
+            foreach ($all as $one) {
+                $attrCode = $one[Cfg::E_EAV_ATTRIBUTE_A_ATTRIBUTE_CODE];
+                $attrId = $one[Cfg::E_EAV_ATTRIBUTE_A_ATTRIBUTE_ID];
+                $this->cacheAttrIds[$attrCode] = $attrId;
+            }
         }
-        return $this->cacheAttrIdMediaGallery;
+        $result = $this->cacheAttrIds[$code];
+        return $result;
     }
 
     /**
@@ -130,7 +142,7 @@ class Media
             $notSaved[$value] = $item;
         }
         /* save values (paths) that are not exist */
-        $idsNew = [];
+        $result = [];
         if (count($notSaved)) {
             $conn = $this->resource->getConnection();
             $table = $this->resource->getTableName(Cfg::ENTITY_CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY);
@@ -139,24 +151,24 @@ class Media
             $conn->insertOnDuplicate($table, $notSaved, $fields);
             /* get IDs for new values (paths) */
             $valuesNew = array_keys($notSaved);
-            $idsNew = $this->getValueIdsForValues($valuesNew);
+            $result = $this->getValueIdsForValues($valuesNew);
         }
-        return [$idsExist, $idsNew];
+        return $result;
     }
 
     /**
      * Save data to 'catalog_product_entity_media_gallery_value'
      * and to 'catalog_product_entity_media_gallery_value_to_entity'.
      *
-     * @param array $toSave paths to images (SKU is a key)
+     * @param array $gallery paths to images (SKU is a key)
      * @param array $prodIds ID-by-SKU map
      * @param array $valueIdsNew valueId by value (path) map for newly inserted values
      */
-    private function saveGalleryValueEntity($toSave, $prodIds, $valueIdsNew)
+    private function saveGalleryValueEntity($gallery, $prodIds, $valueIdsNew)
     {
         $rowsValue = [];
         $rowsToEntity = [];
-        foreach ($toSave as $sku => $item) {
+        foreach ($gallery as $sku => $item) {
             $value = $item[Cfg::E_CPE_MEDIA_GALLERY_A_VALUE];
             /* add only new images */
             if (isset($valueIdsNew[$value])) {
@@ -197,6 +209,66 @@ class Media
             $conn->insertOnDuplicate($table, $rowsToEntity, $fields);
         }
 
+    }
+
+    /**
+     * Save varchar attributes for product entity (image, small_image, thumbnail, swatch_image).
+     *
+     * @param array $gallery
+     * @param array $prodIds
+     * @param array $valueIdsNew
+     */
+    private function saveVarAttrs($gallery, $prodIds, $valueIdsNew)
+    {
+        $attrIdImage = $this->getAttrId(Cfg::EAV_ATTR_PROD_IMAGE);
+        $attrIdThumb = $this->getAttrId(Cfg::EAV_ATTR_PROD_THUMBNAIL);
+        $attrIdSmall = $this->getAttrId(Cfg::EAV_ATTR_PROD_SMALL_IMAGE);
+        $attrIdSwatch = $this->getAttrId(Cfg::EAV_ATTR_PROD_SWATCH_IMAGE);
+        $rows = [];
+        foreach ($gallery as $sku => $item) {
+            $value = $item[Cfg::E_CPE_MEDIA_GALLERY_A_VALUE];
+            /* add only new images */
+            if (isset($valueIdsNew[$value])) {
+                $prodId = $prodIds[$sku];
+                $rowImage = [
+                    Cfg::E_EAV_ALL_A_ATTRIBUTE_ID => $attrIdImage,
+                    Cfg::E_EAV_ALL_A_STORE_ID => Cfg::STORE_ID_ADMIN,
+                    Cfg::E_EAV_ALL_A_ENTITY_ID => $prodId,
+                    Cfg::E_EAV_ALL_A_VALUE => $value
+                ];
+                $rowThumb = [
+                    Cfg::E_EAV_ALL_A_ATTRIBUTE_ID => $attrIdThumb,
+                    Cfg::E_EAV_ALL_A_STORE_ID => Cfg::STORE_ID_ADMIN,
+                    Cfg::E_EAV_ALL_A_ENTITY_ID => $prodId,
+                    Cfg::E_EAV_ALL_A_VALUE => $value
+                ];
+                $rowSmall = [
+                    Cfg::E_EAV_ALL_A_ATTRIBUTE_ID => $attrIdSmall,
+                    Cfg::E_EAV_ALL_A_STORE_ID => Cfg::STORE_ID_ADMIN,
+                    Cfg::E_EAV_ALL_A_ENTITY_ID => $prodId,
+                    Cfg::E_EAV_ALL_A_VALUE => $value
+                ];
+                $rowSwatch = [
+                    Cfg::E_EAV_ALL_A_ATTRIBUTE_ID => $attrIdSwatch,
+                    Cfg::E_EAV_ALL_A_STORE_ID => Cfg::STORE_ID_ADMIN,
+                    Cfg::E_EAV_ALL_A_ENTITY_ID => $prodId,
+                    Cfg::E_EAV_ALL_A_VALUE => $value
+                ];
+                $rows[] = $rowImage;
+                $rows[] = $rowThumb;
+                $rows[] = $rowSmall;
+                $rows[] = $rowSwatch;
+            }
+
+        }
+        /* save 'catalog_product_entity_varchar' */
+        if (count($rows)) {
+            $conn = $this->resource->getConnection();
+            $table = $this->resource->getTableName(Cfg::ENTITY_CATALOG_PRODUCT_ENTITY_VARCHAR);
+            /* all rows should be new */
+            $fields = [];
+            $conn->insertOnDuplicate($table, $rows, $fields);
+        }
     }
 
 }
