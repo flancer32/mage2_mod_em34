@@ -48,6 +48,7 @@ class Download
             $found = glob($pattern);
             if (!$found) {
                 /* download file using URL */
+                $this->logger->info("Downloading image for product #$sku from '$url'...");
                 $content = file_get_contents($url);
                 $fileInfo = new \finfo(FILEINFO_MIME_TYPE);
                 $mimeType = $fileInfo->buffer($content);

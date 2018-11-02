@@ -17,9 +17,9 @@ use Em34\App\Service\Replicate\Product\Save\Response as AResponse;
 class Products
     extends \Symfony\Component\Console\Command\Command
 {
+    private const BUNCH_SIZE = 100;
     private const DESC = 'Import products from JSON (catalog initialization).';
     private const NAME = 'em34:import:prod';
-
     private const OPT_ALL_DEFAULT = 'no';
     private const OPT_ALL_NAME = 'all';
     private const OPT_ALL_SHORTCUT = 'a';
@@ -117,6 +117,7 @@ class Products
     ) {
         /** define local working data */
         $output->writeln("Command '{$this->getName()}' is started.");
+        $dateStarted = date('Y-m-d H:i:s');
         $all = (string)$input->getOption(self::OPT_ALL_NAME);
         $limit = (int)$input->getOption(self::OPT_LIMIT_NAME);
         $path = (string)$input->getOption(self::OPT_PATH_NAME);
@@ -129,6 +130,8 @@ class Products
         $this->checkAreaCode();
         /* read JSON */
         $json = $this->readJson($path);
+        $total = count($json);
+        $output->writeln("Total $total records read from input JSON.");
         /* define number of lines to import */
         if ($all == self::OPT_ALL_DEFAULT) {
             if ($limit <= 0) {
@@ -138,6 +141,9 @@ class Products
         }
 
         /* process JSON data */
+        $bunchSize = self::BUNCH_SIZE;
+        $total = count($json);
+        $output->writeln("Importing $total records using $bunchSize rows bunches (see \${MAGE}/var/log/system.log to trace)...");
         $req = $this->getImportRequest($json, 100);
         $resp = $this->srvImportProd->exec($req);
 //        foreach ($json as $one) {
@@ -152,7 +158,40 @@ class Products
 //        }
 
         /** compose result */
+        $dateCompleted = date('Y-m-d H:i:s');
+        $output->writeln("Import is started at '$dateStarted' and is completed at '$dateCompleted'.");
         $output->writeln("Command '{$this->getName()}' is executed.");
+    }
+
+    private function getCountryCode($name)
+    {
+        $nameBoo = trim(mb_strtolower($name));
+        switch ($nameBoo) {
+            case '':
+                $result = null;
+                break;
+            case 'китай':
+                $result = 'CN';
+                break;
+            case 'польша':
+                $result = 'PL';
+                break;
+            case 'россия':
+                $result = 'RU';
+                break;
+            case 'турция':
+                $result = 'TR';
+                break;
+            case 'украина':
+                $result = 'UA';
+                break;
+            case 'япония':
+                $result = 'JP';
+                break;
+            default:
+                $result = null;
+        }
+        return $result;
     }
 
     private function getImportRequest($json, $bunchSize)
@@ -208,37 +247,6 @@ class Products
             $one = new DAttr();
             $one->code = $parts[0];
             $one->value = $parts[1];
-        }
-        return $result;
-    }
-
-    private function getCountryCode($name)
-    {
-        $nameBoo = trim(mb_strtolower($name));
-        switch ($nameBoo) {
-            case '':
-                $result = null;
-                break;
-            case 'китай':
-                $result = 'CN';
-                break;
-            case 'польша':
-                $result = 'PL';
-                break;
-            case 'россия':
-                $result = 'RU';
-                break;
-            case 'турция':
-                $result = 'TR';
-                break;
-            case 'украина':
-                $result = 'UA';
-                break;
-            case 'япония':
-                $result = 'JP';
-                break;
-            default:
-                $result = null;
         }
         return $result;
     }

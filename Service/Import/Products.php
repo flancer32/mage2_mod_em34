@@ -23,10 +23,13 @@ class Products
     private $aSaveMedia;
     /** @var \Em34\App\Service\Import\Products\A\Save\Products */
     private $aSaveProd;
+    /** @var \Psr\Log\LoggerInterface */
+    private $logger;
     /** @var \Magento\Framework\App\ResourceConnection */
     private $resource;
 
     public function __construct(
+        \Psr\Log\LoggerInterface $logger,
         \Magento\Framework\App\ResourceConnection $resource,
         \Em34\App\Service\Import\Products\A\Save\Attributes $aSaveAttrs,
         \Em34\App\Service\Import\Products\A\Save\Inventory $aSaveInventory,
@@ -35,6 +38,7 @@ class Products
         \Em34\App\Service\Import\Products\A\Save\Link\Websites $aSaveLinkWebsite,
         \Em34\App\Service\Import\Products\A\Save\Products $aSaveProd
     ) {
+        $this->logger = $logger;
         $this->resource = $resource;
         $this->aSaveAttrs = $aSaveAttrs;
         $this->aSaveInventory = $aSaveInventory;
@@ -51,8 +55,17 @@ class Products
         $bunchSize = $request->bunchSize;
         $items = $request->items;
         $bunches = array_chunk($items, $bunchSize);
+
+        $totalItems = count($items);
+        $totalBunches = count($bunches);
+        $msg = "Import service is started. Total items: $totalItems; bunch size: $bunchSize; bunches: $totalBunches.";
+        $this->logger->info($msg);
+
+        $i = 1;
         foreach ($bunches as $bunch) {
             $this->processBunch($bunch);
+            $this->logger->info("Bunch #$i from $totalBunches is processed.");
+            $i++;
         }
 
         /** compose result */
