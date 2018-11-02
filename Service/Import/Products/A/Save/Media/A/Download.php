@@ -12,6 +12,8 @@ namespace Em34\App\Service\Import\Products\A\Save\Media\A;
  */
 class Download
 {
+    /** @var \Magento\Framework\Filter\TranslitUrl */
+    private $filterTranslit;
     /** @var \Em34\App\Helper\Paths */
     private $hlpPaths;
     /** @var \Psr\Log\LoggerInterface */
@@ -19,17 +21,19 @@ class Download
 
     public function __construct(
         \Psr\Log\LoggerInterface $logger,
+        \Magento\Framework\Filter\TranslitUrl $filterTranslit,
         \Em34\App\Helper\Paths $hlpPaths
     ) {
         $this->logger = $logger;
         $this->hlpPaths = $hlpPaths;
+        $this->filterTranslit = $filterTranslit;
     }
 
     public function exec($sku, $url)
     {
         $result = null;
-        $normalized = trim(strtolower($sku));
-        $pathPrefix = $this->hlpPaths->getPathPrefixForName($sku);
+        $normalized = $this->normalizeSku($sku);
+        $pathPrefix = $this->hlpPaths->getPathPrefixForName($normalized);
         /* look up for image file in catalog media */
         $dirMediaPub = $this->hlpPaths->getDirPubMediaCatalog();
         $pathToFileMedia = $dirMediaPub . $pathPrefix;
@@ -97,5 +101,17 @@ class Download
         if (!is_dir($fullPath)) {
             mkdir($fullPath, 0770, true);
         }
+    }
+
+    private function normalizeSku($sku)
+    {
+        $result = trim($sku);
+        $result = mb_strtolower($result);
+        $result = $this->filterTranslit->filter($result);
+        $result = str_replace(' ', '_', $result);
+        $result = str_replace('\\', '_', $result);
+        $result = str_replace('/', '_', $result);
+        $result = str_replace('-', '_', $result);
+        return $result;
     }
 }
